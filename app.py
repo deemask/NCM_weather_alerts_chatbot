@@ -1,15 +1,15 @@
 import streamlit as st
 import requests
-import os
 import sqlite3
 import json
+import os
 from datetime import datetime
 from openai import OpenAI
 
 
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-# database
+client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+
 
 DB_PATH = "alerts.db"
 
@@ -51,12 +51,12 @@ def load_alerts():
         res = requests.get(NCM_URL, timeout=10)
         if res.status_code == 200:
             return res.json()
-        else:
-            return []
+        return []
     except:
         return []
 
 alerts = load_alerts()
+
 
 
 CITIES = {
@@ -78,16 +78,20 @@ def extract_city(question):
                 return city
     return None
 
+
+
 def alert_matches_city(alert, city_name):
     city_keys = [k.lower() for k in CITIES[city_name]]
 
     region_en = str(alert.get("regionEn", "")).lower()
     region_ar = str(alert.get("regionAR", "")).lower()
 
+    
     for ck in city_keys:
         if ck in region_en or ck in region_ar:
             return True
 
+    
     for gov in alert.get("governorates", []):
         gov_ar = str(gov.get("nameAr", "")).lower()
         gov_en = str(gov.get("nameEn", "")).lower()
@@ -97,17 +101,21 @@ def alert_matches_city(alert, city_name):
 
     return False
 
+
 def filter_alerts(alerts, city_name):
     if not city_name:
         return []
     return [a for a in alerts if alert_matches_city(a, city_name)]
 
+
+
 def summarize_alert(alert):
     prompt = f"""
-لخص التنبيه التالي من المركز الوطني للأرصاد بطريقة واضحة ومبسطة:
+لخص التنبيه التالي من المركز الوطني للأرصاد بطريقة بسيطة وواضحة بدون إضافة معلومات غير موجودة:
 
-{alert}
+{json.dumps(alert, ensure_ascii=False)}
 """
+
     response = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[{"role": "user", "content": prompt}],
@@ -116,10 +124,11 @@ def summarize_alert(alert):
     return response.choices[0].message.content
 
 
+
 user_q = st.text_input("اكتب سؤالك هنا:")
 
 if user_q:
-    with st.spinner("جاري جلب البيانات..."):
+    with st.spinner("جاري التحقق من التنبيهات..."):
         city = extract_city(user_q)
 
         if not city:
@@ -133,8 +142,6 @@ if user_q:
                 st.subheader("التنبيهات الحالية:")
 
                 for alert in matched:
-                    # save to database
-                    save_alert_to_db(city, alert)
-
+                    save_alert_to_db(city, alert)  # Log to DB
                     summary = summarize_alert(alert)
                     st.info(summary)
