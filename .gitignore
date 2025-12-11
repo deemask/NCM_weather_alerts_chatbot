@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+.venv/
+env/
+venv/
+.DS_Store
+alerts.db
+.streamlit/
+.env
