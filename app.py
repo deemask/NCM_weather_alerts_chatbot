@@ -1,14 +1,15 @@
 import streamlit as st
 import requests
+import os
 import sqlite3
 import json
-import os
 from datetime import datetime
 from openai import OpenAI
 
+# Load API key
+api_key = st.secrets["OPENAI_API_KEY"]
+client = OpenAI(api_key=api_key)
 
-
-client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
 
 DB_PATH = "alerts.db"
@@ -142,6 +143,6 @@ if user_q:
                 st.subheader("التنبيهات الحالية:")
 
                 for alert in matched:
-                    save_alert_to_db(city, alert)  # Log to DB
+                    save_alert_to_db(city, alert)  
                     summary = summarize_alert(alert)
                     st.info(summary)
