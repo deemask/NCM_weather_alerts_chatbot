@@ -65,9 +65,7 @@ def extract_city(q):
     return None
 
 
-# ==========================
-# MATCH ALERTS
-# ==========================
+
 def alert_matches_city(alert, city_name):
     city_keys = [k.lower() for k in CITIES[city_name]]
 
